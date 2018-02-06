@@ -1,5 +1,11 @@
+<<<<<<< HEAD
 migrations/
 *.pyc
 *.sqlite3
 db.sqlite3
 *.DS_Store
+=======
+# Mac OS X 탐색과 관련된 파일 
+*.DS_Store
+
+>>>>>>> 83916a3db5205168c28050d8a51d3ea32910d653
