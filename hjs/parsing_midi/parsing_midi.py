@@ -1,6 +1,7 @@
 import os
 from music21 import converter
 
+# You maybe run this script spyder, check the current working directory
 _train_data_path = os.getcwd() + '/midi_data/train/'
 _test_data_path = os.getcwd() + '/midi_data/test/'
 print(_train_data_path)
