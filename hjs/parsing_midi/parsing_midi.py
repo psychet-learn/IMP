@@ -1,8 +1,6 @@
 import os
-from music21 import converter
+from music21 import converter, instrument, note, chord, midi
 import keras
-from music21 import note
-from music21 import midi
 
 # You maybe run this script spyder, check the current working directory
 _train_data_path = os.getcwd() + '/midi_data/train/'
@@ -20,8 +18,33 @@ _test_data_path = os.getcwd() + '/midi_data/test/'
 
 # '/Users/junseon/Documents/psyche/IMP/hjs/parsing_midi/midi_data/test/adele_-_someone_like_you.mid'
 # s = converter.parse(_test_data_path + 'adele_-_someone_like_you.mid') # input midi file directory and parse into stream data
-s = converter.parse(_test_data_path + 'merry_christmas_mr_lawrence.mid')
+stream = converter.parse(_test_data_path + 'merry_christmas_mr_lawrence.mid')
+notes_to_parse = None
 # s.plot('pianoroll') # print piano roll plot, especially using in jupyter or spyder
+
+parts = instrument.partitionByInstrument(stream)
+print("-------------------")
+print(parts)
+print("-------------------")
+
+
+
+if parts:  # file has instrument parts
+    notes_to_parse = parts.parts[0].recurse()
+else:  # file has notes in a flat structure
+    notes_to_parse = midi.flat.notes
+
+notes = []
+
+for element in notes_to_parse:
+    if isinstance(element, note.Note):
+        notes.append(str(element.pitch))
+    elif isinstance(element, chord.Chord):
+        notes.append('.'.join(str(n) for n in element.normalOrder))
+
+print(notes)
+print("-------------------")
+
 
 # s.show('text', addEndTimes=True) # print stream data
 
@@ -57,7 +80,7 @@ def pad(l, maxlen, content=0):
     return l
 
 
-for el in s.iter:
+for el in stream.iter:
     print(str(el))
     for el2 in el.iter:
         print("\t" + str(el2))
