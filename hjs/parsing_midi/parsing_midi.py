@@ -3,9 +3,9 @@ from music21 import converter, instrument, note, chord, tempo, meter, scale, str
 import pandas as pd
 
 
-def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*', chord_in_a_row=False, save_data_frame=False):
-    """
-
+def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
+                             chord_in_a_row=False, save_data_frame=False):
+    """ parse_midi_to_data_frame
     :param midi_file_directory:
         Default is the current directory in user OS.
     :param midi_file:
@@ -16,16 +16,31 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*', cho
         Default is False
 
     :return parsed_data: The data frame of pandas.
-        columns:
+        -- Col info --
+        part_name:
+        part_id:
+        voice_id:
+        instrument_name:
+        metronome_mark:
+        quarter_bpm:
+        time_signature:
+        scale:
+        element_class_name:
+        pitch_name:
+        pitch_class:
+        octave:
+        velocity:
+        quarter_length:
+        offset:
     """
 
-    # Col info: part_name, part_id, voice_id, instrument_name, metronome_mark, quarter, time_signature, scale,
-    # element_class_name, pitch_name, pitch_class, octave, velocity, quarter_length, offset,
-    cols_name = ['part_name', 'part_id', 'voice_id', 'instrument_name','metronome_mark', 'quarter_bpm',
+    cols_name = ['part_name', 'part_id', 'voice_id', 'instrument_name', 'metronome_mark', 'quarter_bpm',
                  'time_signature', 'scale', 'element_class_name', 'pitch_name', 'pitch_class', 'octave', 'velocity',
                  'quarter_length', 'offset']
-    _row = []
     _array = []
+
+    if chord_in_a_row:
+        pass
 
     # Init a path
     """ You maybe run this script in the spyder, check the current working directory """
@@ -232,8 +247,9 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*', cho
     return pd.DataFrame(_array, columns=cols_name)
 
 
-def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mark, _quarter_bpm, _time_signature,
-               _scale_name, _element_class_name, _pitch_name, _pitch_class, _octave, _velocity, _quarter_length, _offset):
+def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mark, _quarter_bpm,
+               _time_signature, _scale_name, _element_class_name, _pitch_name, _pitch_class, _octave,
+               _velocity, _quarter_length, _offset):
     # Init a row
     _row = []
 
@@ -316,5 +332,6 @@ def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mar
     return _row
 
 
-data = parse_midi_to_data_frame(midi_file="moonlight-movement.mid", save_data_frame=True)
-print(data)
+if __name__ == "__main__":
+    data = parse_midi_to_data_frame(midi_file="moonlight-movement.mid", save_data_frame=True)
+    print(data)
