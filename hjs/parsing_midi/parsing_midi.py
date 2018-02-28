@@ -117,7 +117,7 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*', cho
                                             chord_element.pitch.octave) +
                                               ", vol: " + str(chord_element.volume.velocity) +
                                               ", len: " + str(chord_element.duration.quarterLength) + ", time: " + str(
-                                            chord_element.offset))
+                                            element.offset))
 
                                         _element_class_name = "Chord"
                                         _pitch_name = chord_element.pitch.name
@@ -125,7 +125,7 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*', cho
                                         _octave = chord_element.pitch.octave
                                         _velocity = chord_element.volume.velocity
                                         _quarter_length = chord_element.duration.quarterLength
-                                        _offset = chord_element.offset
+                                        _offset = element.offset
 
                                         _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
                                                           _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
@@ -206,7 +206,7 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*', cho
                                     _octave = chord_element.pitch.octave
                                     _velocity = chord_element.volume.velocity
                                     _quarter_length = chord_element.duration.quarterLength
-                                    _offset = chord_element.offset
+                                    _offset = obj.offset
 
                                     _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
                                                       _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
@@ -316,5 +316,5 @@ def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mar
     return _row
 
 
-data = parse_midi_to_data_frame(midi_file="Autumn.mid", save_data_frame=True)
+data = parse_midi_to_data_frame(midi_file="moonlight-movement.mid", save_data_frame=True)
 print(data)
