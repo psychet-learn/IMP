@@ -328,7 +328,7 @@ def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mar
 
 
 if __name__ == "__main__":
-    # parsing one MIDI file
+    # parsing one MIDI file and save the data frame in the directory
     data = parse_midi_to_data_frame(midi_file="moonlight-movement.mid", save_data_frame=True)
     print(data)
 
@@ -337,6 +337,6 @@ if __name__ == "__main__":
     data = parse_midi_to_data_frame(midi_file=["mozart-symphony40-1.mid", "moonlight-movement.mid"])
     print(data)
 
-    # parsing all MIDI files in the directory
-    data = parse_midi_to_data_frame(midi_file='*', save_data_frame=True)
+    # parsing all MIDI files and save the data frame in the directory
+    data = parse_midi_to_data_frame(save_data_frame=True)
     print(data)
