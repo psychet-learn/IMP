@@ -306,17 +306,17 @@ def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mar
         _row.append(_pitch_name)
     # _pitch_class
     if _pitch_class == '':
-        _row.append(None)
+        _row.append(-1)
     else:
         _row.append(_pitch_class)
     # _octave
     if _octave == '':
-        _row.append(None)
+        _row.append(-1)
     else:
         _row.append(_octave)
     # _velocity
     if _velocity == '':
-        _row.append(None)
+        _row.append(-1)
     else:
         _row.append(_velocity)
     # _quarter_length
@@ -340,13 +340,13 @@ def print_progress_bar(_iter, midi_file):
 
     print("-- Parsing process --")
 
-    _bar = "  ["
+    _bar = " ["
     for i in range(0, int(_iter * _ratio)):
         _bar += "="
     _bar += ">"
     for i in range(int(_iter * _ratio), _max):
         _bar += " "
-    _bar += "]"
+    _bar += "]   " + str(int(_iter * _ratio * 2)) + "%"
 
     print(_bar)
 
