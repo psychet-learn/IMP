@@ -52,7 +52,10 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
     # Init MIDI file(s)
     if midi_file == '*':
         midi_file = os.listdir(path)
-        for midi_file_name in midi_file:
+
+        for _iter, midi_file_name in enumerate(midi_file):
+            print_progress_bar(_iter, midi_file)
+
             if midi_file_name.split('.')[1] == 'mid':
                 try:
                     stream_data = converter.parse(path + midi_file_name)
@@ -65,7 +68,9 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
 
     else:
         if isinstance(midi_file, list):
-            for midi_file_name in midi_file:
+            for _iter, midi_file_name in enumerate(midi_file):
+                print_progress_bar(_iter, midi_file)
+
                 try:
                     stream_data = converter.parse(path + midi_file_name)
                     _array_temp = parsing_stream_data(stream_data, chord_in_a_row)
@@ -245,6 +250,7 @@ def parsing_stream_data(stream_data, chord_in_a_row):
 def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mark, _quarter_bpm,
                _time_signature, _scale_name, _element_class_name, _pitch_name, _pitch_class, _octave,
                _velocity, _quarter_length, _offset):
+
     # Init a row
     _row = []
 
@@ -327,15 +333,33 @@ def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mar
     return _row
 
 
+def print_progress_bar(_iter, midi_file):
+    _iter += 1
+    _max = 50
+    _ratio = _max / len(midi_file)
+
+    print("-- Parsing process --")
+
+    _bar = "  ["
+    for i in range(0, int(_iter * _ratio)):
+        _bar += "="
+    _bar += ">"
+    for i in range(int(_iter * _ratio), _max):
+        _bar += " "
+    _bar += "]"
+
+    print(_bar)
+
+
 if __name__ == "__main__":
     # parsing one MIDI file and save the data frame in the directory
-    data = parse_midi_to_data_frame(midi_file="moonlight-movement.mid", save_data_frame=True)
-    print(data)
+    # data = parse_midi_to_data_frame(midi_file="moonlight-movement.mid", save_data_frame=True)
+    # print(data)
 
     # parsing MIDI files through pass a list to midi_file param
     # list argument is undesirable in python 3, so do not use this except in special cases.
-    data = parse_midi_to_data_frame(midi_file=["mozart-symphony40-1.mid", "moonlight-movement.mid"])
-    print(data)
+    # data = parse_midi_to_data_frame(midi_file=["mozart-symphony40-1.mid", "moonlight-movement.mid"])
+    # print(data)
 
     # parsing all MIDI files and save the data frame in the directory
     data = parse_midi_to_data_frame(save_data_frame=True)
