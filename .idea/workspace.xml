@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="317327ea-e40b-404c-97b7-b8e581aa0a50" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/hjs/parsing_midi/midi_data/train/data.csv" afterPath="$PROJECT_DIR$/hjs/parsing_midi/midi_data/train/data.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/hjs/parsing_midi/parsing_midi.py" afterPath="$PROJECT_DIR$/hjs/parsing_midi/parsing_midi.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -13,15 +12,15 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="CoverageDataManager">
-    <SUITE FILE_PATH="coverage/IMP$parsing_midi.coverage" NAME="parsing_midi Coverage Results" MODIFIED="1519999511124" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/hjs/parsing_midi" />
+    <SUITE FILE_PATH="coverage/IMP$parsing_midi.coverage" NAME="parsing_midi Coverage Results" MODIFIED="1520000187153" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/hjs/parsing_midi" />
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file leaf-file-name="parsing_midi.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/hjs/parsing_midi/parsing_midi.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="174">
-              <caret line="348" column="17" lean-forward="false" selection-start-line="348" selection-start-column="17" selection-end-line="348" selection-end-column="17" />
+            <state relative-caret-position="319">
+              <caret line="352" column="0" lean-forward="true" selection-start-line="352" selection-start-column="0" selection-end-line="352" selection-end-column="0" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -112,22 +111,6 @@
             <path>
               <item name="IMP" type="b2602c69:ProjectViewProjectNode" />
               <item name="IMP" type="462c0819:PsiDirectoryNode" />
-              <item name="hjs" type="462c0819:PsiDirectoryNode" />
-              <item name="parsing_midi" type="462c0819:PsiDirectoryNode" />
-              <item name="midi_data" type="462c0819:PsiDirectoryNode" />
-              <item name="test" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="IMP" type="b2602c69:ProjectViewProjectNode" />
-              <item name="IMP" type="462c0819:PsiDirectoryNode" />
-              <item name="hjs" type="462c0819:PsiDirectoryNode" />
-              <item name="parsing_midi" type="462c0819:PsiDirectoryNode" />
-              <item name="midi_data" type="462c0819:PsiDirectoryNode" />
-              <item name="train" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="IMP" type="b2602c69:ProjectViewProjectNode" />
-              <item name="IMP" type="462c0819:PsiDirectoryNode" />
               <item name="ysj" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
@@ -194,7 +177,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -307,8 +289,8 @@
     <entry file="file://$PROJECT_DIR$/IMP/hjs/parsing_midi/parsing_midi.py" />
     <entry file="file://$PROJECT_DIR$/hjs/parsing_midi/parsing_midi.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="348" column="17" lean-forward="false" selection-start-line="348" selection-start-column="17" selection-end-line="348" selection-end-column="17" />
+        <state relative-caret-position="319">
+          <caret line="352" column="0" lean-forward="true" selection-start-line="352" selection-start-column="0" selection-end-line="352" selection-end-column="0" />
           <folding>
             <element signature="e#0#9#0" expanded="true" />
           </folding>
