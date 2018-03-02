@@ -1,14 +1,15 @@
 import os
 from music21 import converter, instrument, note, chord, tempo, meter, scale, stream
+from music21.converter import ConverterException
 import pandas as pd
 
 
 def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
                              chord_in_a_row=False, save_data_frame=False):
     """ parse_midi_to_data_frame
-    :param midi_file_directory:
+    :param midi_file_directory: The path where the MIDI file is located
         Default is the current directory in user OS.
-    :param midi_file:
+    :param midi_file: Name of MIDI file(s) or '*'
         Default is '*' (This means that all MIDI files are imported.)
     :param chord_in_a_row: Whether to make the chord in the stream data into a single row.
         Default is False
@@ -17,30 +18,29 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
 
     :return parsed_data: The data frame of pandas.
         -- Col info --
-        part_name:
-        part_id:
-        voice_id:
-        instrument_name:
-        metronome_mark:
-        quarter_bpm:
-        time_signature:
-        scale:
-        element_class_name:
-        pitch_name:
-        pitch_class:
-        octave:
-        velocity:
-        quarter_length:
-        offset:
+        part_name: a string representing the name of a part(A Stream subclass for designating music).
+        part_id: a int ID representing a part(This is probably distinguished by the instrument).
+        voice_id: a int ID representing a voice(This means that the number of instruments that make up a harmony).
+        instrument_name: a int representing the best estimated instrument name.
+        metronome_mark: a string type indicating the speed of the music.
+        quarter_bpm: a int type indicating the speed of the music. (The bigger the number, the faster it is.)
+        time_signature: a fractional element that represents the beat of the music.
+        scale: any set of musical notes ordered by fundamental frequency or pitch. (ex. F Major)
+        element_class_name: a string representing the name of a element. (ex. Note, Rest or Chord)
+        pitch_name: a string representing the name of a Note. (ex. C, B#(sharp), E-(flat))
+        pitch_class: a int ID representing a Note.
+        octave: a int representing what octave it is.
+        velocity: a int representing how fast that Note is. (The bigger the number, the louder it is.)
+        quarter_length: a fractional element that represents the length of the element.
+        offset: a fractional element that represents the relative time at which the element starts.
     """
 
+    # Init name of columns
     cols_name = ['part_name', 'part_id', 'voice_id', 'instrument_name', 'metronome_mark', 'quarter_bpm',
                  'time_signature', 'scale', 'element_class_name', 'pitch_name', 'pitch_class', 'octave', 'velocity',
                  'quarter_length', 'offset']
+    # Init array for data frame
     _array = []
-
-    if chord_in_a_row:
-        pass
 
     # Init a path
     """ You maybe run this script in the spyder, check the current working directory """
@@ -50,191 +50,40 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
         path = midi_file_directory
 
     # Init MIDI file(s)
-    if midi_file == "*":
-        pass
+    if midi_file == '*':
+        midi_file = os.listdir(path)
+        for midi_file_name in midi_file:
+            if midi_file_name.split('.')[1] == 'mid':
+                try:
+                    stream_data = converter.parse(path + midi_file_name)
+                    _array_temp = parsing_stream_data(stream_data, chord_in_a_row)
+                    # Make multiple music data into one data frame through appending a _array_temp
+                    _array += _array_temp
+
+                except ConverterException:
+                    print("There isn't a midi file " + midi_file_name)
+
     else:
         if isinstance(midi_file, list):
-            pass
+            for midi_file_name in midi_file:
+                try:
+                    stream_data = converter.parse(path + midi_file_name)
+                    _array_temp = parsing_stream_data(stream_data, chord_in_a_row)
+                    # Make multiple music data into one data frame through appending a _array_temp
+                    _array += _array_temp
+
+                except ConverterException:
+                    print("There isn't a midi file " + midi_file_name)
+
         elif isinstance(midi_file, str):
             # input the MIDI file directory and parse into a stream data
-            stream_data = converter.parse(path + midi_file)
+            try:
+                stream_data = converter.parse(path + midi_file)
+                _array = parsing_stream_data(stream_data, chord_in_a_row)
 
-            if stream_data:
+            except ConverterException:
+                print("There isn't a midi file " + midi_file)
 
-                for part in stream_data.parts:
-                    # the partName is instrument name
-                    print("part name: " + str(part.partName) + " part id: " + str(part.id))
-
-                    # Init a row variable
-                    _part_name = part.partName
-                    _part_id = part.id
-                    _voice_id = ''
-                    _instrument_name = ''
-                    _metronome_mark = ''
-                    _quarter_bpm = ''
-                    _time_signature = ''
-                    _scale_name = ''
-
-                    for obj in part:
-
-                        if isinstance(obj, stream.Voice):
-                            print("\tvoice // id: " + str(obj.id))
-
-                            _voice_id = obj.id
-
-                        try:
-                            for element in obj:
-                                if isinstance(element, note.Note):
-                                    print("\t\tnote // pitch: " + str(element.pitch.name) + "(" + str(
-                                        element.pitch.pitchClass) + ")" + " / " + str(element.pitch.octave) +
-                                          ", vol: " + str(element.volume.velocity) +
-                                          ", len: " + str(element.duration.quarterLength) + ", time: " + str(
-                                        element.offset))
-
-                                    _element_class_name = "Note"
-                                    _pitch_name = element.pitch.name
-                                    _pitch_class = element.pitch.pitchClass
-                                    _octave = element.pitch.octave
-                                    _velocity = element.volume.velocity
-                                    _quarter_length = element.duration.quarterLength
-                                    _offset = element.offset
-
-                                    _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
-                                                      _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
-                                                      _element_class_name, _pitch_name, _pitch_class,
-                                                      _octave, _velocity, _quarter_length, _offset)
-
-                                    _array.append(_row)
-
-                                elif isinstance(element, note.Rest):
-                                    print("\t\trest // len: " + str(element.duration.quarterLength) + ", time: " + str(
-                                        element.offset))
-
-                                    _element_class_name = "Rest"
-                                    _pitch_name = ''
-                                    _pitch_class = ''
-                                    _octave = ''
-                                    _velocity = ''
-                                    _quarter_length = element.duration.quarterLength
-                                    _offset = element.offset
-
-                                    _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
-                                                      _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
-                                                      _element_class_name, _pitch_name, _pitch_class,
-                                                      _octave, _velocity, _quarter_length, _offset)
-
-                                    _array.append(_row)
-
-                                elif isinstance(element, chord.Chord):
-                                    for chord_element in element:
-                                        print("\t\tchord // pitch: " + str(chord_element.pitch.name) + "(" + str(
-                                            chord_element.pitch.pitchClass) + ")" + " / " + str(
-                                            chord_element.pitch.octave) +
-                                              ", vol: " + str(chord_element.volume.velocity) +
-                                              ", len: " + str(chord_element.duration.quarterLength) + ", time: " + str(
-                                            element.offset))
-
-                                        _element_class_name = "Chord"
-                                        _pitch_name = chord_element.pitch.name
-                                        _pitch_class = chord_element.pitch.pitchClass
-                                        _octave = chord_element.pitch.octave
-                                        _velocity = chord_element.volume.velocity
-                                        _quarter_length = chord_element.duration.quarterLength
-                                        _offset = element.offset
-
-                                        _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
-                                                          _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
-                                                          _element_class_name, _pitch_name, _pitch_class,
-                                                          _octave, _velocity, _quarter_length, _offset)
-
-                                        _array.append(_row)
-
-                                else:
-                                    print(element)
-                        except TypeError:
-                            if isinstance(obj, instrument.Instrument):
-                                print("\tinstrument // name: " + str(obj.bestName()))
-                                _instrument_name = obj.bestName()
-                            elif isinstance(obj, tempo.MetronomeMark):
-                                print("\tmetronome // mark: " + str(obj.text) + " quarter: " + str(obj.getQuarterBPM()))
-                                _metronome_mark = obj.text
-                                _quarter_bpm = obj.getQuarterBPM()
-                            elif isinstance(obj, meter.TimeSignature):
-                                print("\ttime signature // sign: " + str(obj.ratioString))
-                                _time_signature = obj.ratioString
-                            elif isinstance(obj, scale.ConcreteScale):
-                                print("\tscale // scale: " + str(obj.name))
-                                _scale_name = obj.name
-                            else:
-                                if isinstance(obj, note.Note):
-                                    print("\t\tnote // pitch: " + str(obj.pitch.name) + "(" + str(
-                                        obj.pitch.pitchClass) + ")" + " / " + str(obj.pitch.octave) +
-                                          ", vol: " + str(obj.volume.velocity) +
-                                          ", len: " + str(obj.duration.quarterLength) + ", time: " + str(obj.offset))
-
-                                    _element_class_name = "Note"
-                                    _pitch_name = obj.pitch.name
-                                    _pitch_class = obj.pitch.pitchClass
-                                    _octave = obj.pitch.octave
-                                    _velocity = obj.volume.velocity
-                                    _quarter_length = obj.duration.quarterLength
-                                    _offset = obj.offset
-
-                                    _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
-                                                      _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
-                                                      _element_class_name, _pitch_name, _pitch_class,
-                                                      _octave, _velocity, _quarter_length, _offset)
-
-                                    _array.append(_row)
-
-                                elif isinstance(obj, note.Rest):
-                                    print("\t\trest // len: " + str(obj.duration.quarterLength) + ", time: " + str(
-                                        obj.offset))
-
-                                    _element_class_name = "Rest"
-                                    _pitch_name = ''
-                                    _pitch_class = ''
-                                    _octave = ''
-                                    _velocity = ''
-                                    _quarter_length = obj.duration.quarterLength
-                                    _offset = obj.offset
-
-                                    _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
-                                                      _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
-                                                      _element_class_name, _pitch_name, _pitch_class,
-                                                      _octave, _velocity, _quarter_length, _offset)
-
-                                    _array.append(_row)
-
-                                elif isinstance(obj, chord.Chord):
-                                    for chord_element in obj:
-                                        print("\t\tchord // pitch: " + str(chord_element.pitch.name) + "(" + str(
-                                            chord_element.pitch.pitchClass) + ")" + " / " + str(
-                                            chord_element.pitch.octave) +
-                                              ", vol: " + str(chord_element.volume.velocity) +
-                                              ", len: " + str(chord_element.duration.quarterLength) + ", time: " + str(
-                                            obj.offset))
-
-                                    _element_class_name = "Chord"
-                                    _pitch_name = chord_element.pitch.name
-                                    _pitch_class = chord_element.pitch.pitchClass
-                                    _octave = chord_element.pitch.octave
-                                    _velocity = chord_element.volume.velocity
-                                    _quarter_length = chord_element.duration.quarterLength
-                                    _offset = obj.offset
-
-                                    _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
-                                                      _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
-                                                      _element_class_name, _pitch_name, _pitch_class,
-                                                      _octave, _velocity, _quarter_length, _offset)
-
-                                    _array.append(_row)
-
-                                else:
-                                    print(str(obj))
-            else:
-                print("The assigned MIDI file cannot parse to streaming data.\n")
-                return pd.DataFrame(_array)
         else:
             print("Undesirable instance was passed through the parameter MIDI file.\n")
             print("Please, assign a str('a MIDI file'), list([MIDI file(s)]) or " +
@@ -245,6 +94,152 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
         pd.DataFrame(_array, columns=cols_name).to_csv(path + "data.csv")
 
     return pd.DataFrame(_array, columns=cols_name)
+
+
+def parsing_stream_data(stream_data, chord_in_a_row):
+
+    # Init array
+    _array = []
+
+    if chord_in_a_row:
+        pass
+
+    # parsing a streaming data
+    for part in stream_data.parts:
+
+        # Init a row variable
+        _part_name = part.partName
+        _part_id = part.id
+        _voice_id = ''
+        _instrument_name = ''
+        _metronome_mark = ''
+        _quarter_bpm = ''
+        _time_signature = ''
+        _scale_name = ''
+
+        for obj in part:
+
+            if isinstance(obj, stream.Voice):
+                _voice_id = obj.id
+
+            try:
+                for element in obj:
+                    if isinstance(element, note.Note):
+                        _element_class_name = "Note"
+                        _pitch_name = element.pitch.name
+                        _pitch_class = element.pitch.pitchClass
+                        _octave = element.pitch.octave
+                        _velocity = element.volume.velocity
+                        _quarter_length = element.duration.quarterLength
+                        _offset = element.offset
+
+                        _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
+                                          _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
+                                          _element_class_name, _pitch_name, _pitch_class,
+                                          _octave, _velocity, _quarter_length, _offset)
+
+                        _array.append(_row)
+
+                    elif isinstance(element, note.Rest):
+                        _element_class_name = "Rest"
+                        _pitch_name = ''
+                        _pitch_class = ''
+                        _octave = ''
+                        _velocity = ''
+                        _quarter_length = element.duration.quarterLength
+                        _offset = element.offset
+
+                        _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
+                                          _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
+                                          _element_class_name, _pitch_name, _pitch_class,
+                                          _octave, _velocity, _quarter_length, _offset)
+
+                        _array.append(_row)
+
+                    elif isinstance(element, chord.Chord):
+                        for chord_element in element:
+                            _element_class_name = "Chord"
+                            _pitch_name = chord_element.pitch.name
+                            _pitch_class = chord_element.pitch.pitchClass
+                            _octave = chord_element.pitch.octave
+                            _velocity = chord_element.volume.velocity
+                            _quarter_length = chord_element.duration.quarterLength
+                            _offset = element.offset
+
+                            _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
+                                              _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
+                                              _element_class_name, _pitch_name, _pitch_class,
+                                              _octave, _velocity, _quarter_length, _offset)
+
+                            _array.append(_row)
+
+                    else:
+                        print('this ' + str(element) + ' cannot be converted.')
+
+            except TypeError:
+                if isinstance(obj, instrument.Instrument):
+                    _instrument_name = obj.bestName()
+                elif isinstance(obj, tempo.MetronomeMark):
+                    _metronome_mark = obj.text
+                    _quarter_bpm = obj.getQuarterBPM()
+                elif isinstance(obj, meter.TimeSignature):
+                    _time_signature = obj.ratioString
+                elif isinstance(obj, scale.ConcreteScale):
+                    _scale_name = obj.name
+                else:
+                    if isinstance(obj, note.Note):
+                        _element_class_name = "Note"
+                        _pitch_name = obj.pitch.name
+                        _pitch_class = obj.pitch.pitchClass
+                        _octave = obj.pitch.octave
+                        _velocity = obj.volume.velocity
+                        _quarter_length = obj.duration.quarterLength
+                        _offset = obj.offset
+
+                        _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
+                                          _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
+                                          _element_class_name, _pitch_name, _pitch_class,
+                                          _octave, _velocity, _quarter_length, _offset)
+
+                        _array.append(_row)
+
+                    elif isinstance(obj, note.Rest):
+                        _element_class_name = "Rest"
+                        _pitch_name = ''
+                        _pitch_class = ''
+                        _octave = ''
+                        _velocity = ''
+                        _quarter_length = obj.duration.quarterLength
+                        _offset = obj.offset
+
+                        _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
+                                          _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
+                                          _element_class_name, _pitch_name, _pitch_class,
+                                          _octave, _velocity, _quarter_length, _offset)
+
+                        _array.append(_row)
+
+                    elif isinstance(obj, chord.Chord):
+                        for chord_element in obj:
+                            _element_class_name = "Chord"
+                            _pitch_name = chord_element.pitch.name
+                            _pitch_class = chord_element.pitch.pitchClass
+                            _octave = chord_element.pitch.octave
+                            _velocity = chord_element.volume.velocity
+                            _quarter_length = chord_element.duration.quarterLength
+                            _offset = obj.offset
+
+                            _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
+                                              _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
+                                              _element_class_name, _pitch_name, _pitch_class,
+                                              _octave, _velocity, _quarter_length, _offset)
+
+                            _array.append(_row)
+
+                    else:
+                        print('this ' + str(obj) + ' cannot be converted.')
+
+    return _array
 
 
 def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mark, _quarter_bpm,
@@ -333,5 +328,15 @@ def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mar
 
 
 if __name__ == "__main__":
+    # parsing one MIDI file
     data = parse_midi_to_data_frame(midi_file="moonlight-movement.mid", save_data_frame=True)
+    print(data)
+
+    # parsing MIDI files through pass a list to midi_file param
+    # list argument is undesirable in python 3, so do not use this except in special cases.
+    data = parse_midi_to_data_frame(midi_file=["mozart-symphony40-1.mid", "moonlight-movement.mid"])
+    print(data)
+
+    # parsing all MIDI files in the directory
+    data = parse_midi_to_data_frame(midi_file='*', save_data_frame=True)
     print(data)
