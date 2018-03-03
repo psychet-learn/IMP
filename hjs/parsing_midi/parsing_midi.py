@@ -54,7 +54,6 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
         midi_file = os.listdir(path)
 
         for _iter, midi_file_name in enumerate(midi_file):
-            print_progress_bar(_iter, midi_file)
 
             if midi_file_name.split('.')[1] == 'mid':
                 try:
@@ -66,10 +65,11 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
                 except ConverterException:
                     print("There isn't a midi file " + midi_file_name)
 
+            print_progress_bar(_iter, midi_file)
+
     else:
         if isinstance(midi_file, list):
             for _iter, midi_file_name in enumerate(midi_file):
-                print_progress_bar(_iter, midi_file)
 
                 try:
                     stream_data = converter.parse(path + midi_file_name)
@@ -79,6 +79,8 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
 
                 except ConverterException:
                     print("There isn't a midi file " + midi_file_name)
+
+                print_progress_bar(_iter, midi_file)
 
         elif isinstance(midi_file, str):
             # input the MIDI file directory and parse into a stream data
@@ -338,7 +340,7 @@ def print_progress_bar(_iter, midi_file):
     _max = 50
     _ratio = _max / len(midi_file)
 
-    print("-- Parsing process --")
+    print("-- Parsing process --   " + str(len(midi_file)) + "개 중 " + str(_iter) + "개 완료")
 
     _bar = " ["
     for i in range(0, int(_iter * _ratio)):
@@ -346,7 +348,7 @@ def print_progress_bar(_iter, midi_file):
     _bar += ">"
     for i in range(int(_iter * _ratio), _max):
         _bar += " "
-    _bar += "]   " + str(int(_iter * _ratio * 2)) + "%"
+    _bar += "]   " + "{0:.2f}".format(round(_iter * _ratio * 2, 2)) + " %"
 
     print(_bar)
 
