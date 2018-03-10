@@ -1,7 +1,8 @@
 import os
+
+import pandas as pd
 from music21 import converter, instrument, note, chord, tempo, meter, scale, stream
 from music21.converter import ConverterException
-import pandas as pd
 
 
 def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
@@ -18,12 +19,12 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
 
     :return parsed_data: The data frame of pandas.
         -- Col info --
-        part_name: a string representing the name of a part(A Stream subclass for designating music).
+        midi_file_name: a string representing the name of a midi file.
         part_id: a int ID representing a part(This is probably distinguished by the instrument).
         voice_id: a int ID representing a voice(This means that the number of instruments that make up a harmony).
         instrument_name: a int representing the best estimated instrument name.
         metronome_mark: a string type indicating the speed of the music.
-        quarter_bpm: a int type indicating the speed of the music. (The bigger the number, the faster it is.)
+        metronome_number: a int type indicating the speed of the music. (The bigger the number, the faster it is.)
         time_signature: a fractional element that represents the beat of the music.
         scale: any set of musical notes ordered by fundamental frequency or pitch. (ex. F Major)
         element_class_name: a string representing the name of a element. (ex. Note, Rest or Chord)
@@ -36,7 +37,7 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
     """
 
     # Init name of columns
-    cols_name = ['part_name', 'part_id', 'voice_id', 'instrument_name', 'metronome_mark', 'quarter_bpm',
+    cols_name = ['midi_file_name', 'part_id', 'voice_id', 'instrument_name', 'metronome_mark', 'metronome_number',
                  'time_signature', 'scale', 'element_class_name', 'pitch_name', 'pitch_class', 'octave', 'velocity',
                  'quarter_length', 'offset']
     # Init array for data frame
@@ -58,14 +59,15 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
             if midi_file_name.split('.')[1] == 'mid':
                 try:
                     stream_data = converter.parse(path + midi_file_name)
-                    _array_temp = parsing_stream_data(stream_data, chord_in_a_row)
+                    print(stream_data.show('text'))
+                    _array_temp = parsing_stream_data(stream_data, midi_file_name, chord_in_a_row)
                     # Make multiple music data into one data frame through appending a _array_temp
                     _array += _array_temp
 
                 except ConverterException:
                     print("There isn't a midi file " + midi_file_name)
 
-            print_progress_bar(_iter, midi_file)
+            print_progress_bar_parsing(_iter, midi_file)
 
     else:
         if isinstance(midi_file, list):
@@ -73,23 +75,25 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
 
                 try:
                     stream_data = converter.parse(path + midi_file_name)
-                    _array_temp = parsing_stream_data(stream_data, chord_in_a_row)
+                    print(stream_data.show('text'))
+                    _array_temp = parsing_stream_data(stream_data, midi_file_name, chord_in_a_row)
                     # Make multiple music data into one data frame through appending a _array_temp
                     _array += _array_temp
 
                 except ConverterException:
                     print("There isn't a midi file " + midi_file_name)
 
-                print_progress_bar(_iter, midi_file)
+                print_progress_bar_parsing(_iter, midi_file)
 
         elif isinstance(midi_file, str):
             # input the MIDI file directory and parse into a stream data
+            midi_file_name = midi_file
             try:
-                stream_data = converter.parse(path + midi_file)
-                _array = parsing_stream_data(stream_data, chord_in_a_row)
+                stream_data = converter.parse(path + midi_file_name)
+                _array = parsing_stream_data(stream_data, midi_file_name, chord_in_a_row)
 
             except ConverterException:
-                print("There isn't a midi file " + midi_file)
+                print("There isn't a midi file " + midi_file_name)
 
         else:
             print("Undesirable instance was passed through the parameter MIDI file.\n")
@@ -103,7 +107,7 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
     return pd.DataFrame(_array, columns=cols_name)
 
 
-def parsing_stream_data(stream_data, chord_in_a_row):
+def parsing_stream_data(stream_data, midi_file_name, chord_in_a_row):
 
     # Init array
     _array = []
@@ -115,12 +119,12 @@ def parsing_stream_data(stream_data, chord_in_a_row):
     for part in stream_data.parts:
 
         # Init a row variable
-        _part_name = part.partName
+        _midi_file_name = midi_file_name.split('.')[0]
         _part_id = part.id
         _voice_id = ''
         _instrument_name = ''
         _metronome_mark = ''
-        _quarter_bpm = ''
+        _metronome_number = ''
         _time_signature = ''
         _scale_name = ''
 
@@ -140,8 +144,8 @@ def parsing_stream_data(stream_data, chord_in_a_row):
                         _quarter_length = element.duration.quarterLength
                         _offset = element.offset
 
-                        _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
-                                          _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
+                        _row = make_a_row(_midi_file_name, _part_id, _voice_id, _instrument_name,
+                                          _metronome_mark, _metronome_number, _time_signature, _scale_name,
                                           _element_class_name, _pitch_name, _pitch_class,
                                           _octave, _velocity, _quarter_length, _offset)
 
@@ -156,8 +160,8 @@ def parsing_stream_data(stream_data, chord_in_a_row):
                         _quarter_length = element.duration.quarterLength
                         _offset = element.offset
 
-                        _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
-                                          _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
+                        _row = make_a_row(_midi_file_name, _part_id, _voice_id, _instrument_name,
+                                          _metronome_mark, _metronome_number, _time_signature, _scale_name,
                                           _element_class_name, _pitch_name, _pitch_class,
                                           _octave, _velocity, _quarter_length, _offset)
 
@@ -173,8 +177,8 @@ def parsing_stream_data(stream_data, chord_in_a_row):
                             _quarter_length = chord_element.duration.quarterLength
                             _offset = element.offset
 
-                            _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
-                                              _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
+                            _row = make_a_row(_midi_file_name, _part_id, _voice_id, _instrument_name,
+                                              _metronome_mark, _metronome_number, _time_signature, _scale_name,
                                               _element_class_name, _pitch_name, _pitch_class,
                                               _octave, _velocity, _quarter_length, _offset)
 
@@ -188,7 +192,7 @@ def parsing_stream_data(stream_data, chord_in_a_row):
                     _instrument_name = obj.bestName()
                 elif isinstance(obj, tempo.MetronomeMark):
                     _metronome_mark = obj.text
-                    _quarter_bpm = obj.getQuarterBPM()
+                    _metronome_number = obj.number
                 elif isinstance(obj, meter.TimeSignature):
                     _time_signature = obj.ratioString
                 elif isinstance(obj, scale.ConcreteScale):
@@ -203,8 +207,8 @@ def parsing_stream_data(stream_data, chord_in_a_row):
                         _quarter_length = obj.duration.quarterLength
                         _offset = obj.offset
 
-                        _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
-                                          _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
+                        _row = make_a_row(_midi_file_name, _part_id, _voice_id, _instrument_name,
+                                          _metronome_mark, _metronome_number, _time_signature, _scale_name,
                                           _element_class_name, _pitch_name, _pitch_class,
                                           _octave, _velocity, _quarter_length, _offset)
 
@@ -219,8 +223,8 @@ def parsing_stream_data(stream_data, chord_in_a_row):
                         _quarter_length = obj.duration.quarterLength
                         _offset = obj.offset
 
-                        _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
-                                          _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
+                        _row = make_a_row(_midi_file_name, _part_id, _voice_id, _instrument_name,
+                                          _metronome_mark, _metronome_number, _time_signature, _scale_name,
                                           _element_class_name, _pitch_name, _pitch_class,
                                           _octave, _velocity, _quarter_length, _offset)
 
@@ -236,8 +240,8 @@ def parsing_stream_data(stream_data, chord_in_a_row):
                             _quarter_length = chord_element.duration.quarterLength
                             _offset = obj.offset
 
-                            _row = make_a_row(_part_name, _part_id, _voice_id, _instrument_name,
-                                              _metronome_mark, _quarter_bpm, _time_signature, _scale_name,
+                            _row = make_a_row(_midi_file_name, _part_id, _voice_id, _instrument_name,
+                                              _metronome_mark, _metronome_number, _time_signature, _scale_name,
                                               _element_class_name, _pitch_name, _pitch_class,
                                               _octave, _velocity, _quarter_length, _offset)
 
@@ -249,7 +253,7 @@ def parsing_stream_data(stream_data, chord_in_a_row):
     return _array
 
 
-def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mark, _quarter_bpm,
+def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mark, _metronome_number,
                _time_signature, _scale_name, _element_class_name, _pitch_name, _pitch_class, _octave,
                _velocity, _quarter_length, _offset):
 
@@ -281,11 +285,11 @@ def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mar
         _row.append(None)
     else:
         _row.append(_metronome_mark)
-    # _quarter_bpm
-    if _quarter_bpm == '':
+    # _metronome_number
+    if _metronome_number == '':
         _row.append(None)
     else:
-        _row.append(_quarter_bpm)
+        _row.append(_metronome_number)
     # _time_signature
     if _time_signature == '':
         _row.append(None)
@@ -335,7 +339,7 @@ def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mar
     return _row
 
 
-def print_progress_bar(_iter, midi_file):
+def print_progress_bar_parsing(_iter, midi_file):
     _iter += 1
     _max = 50
     _ratio = _max / len(midi_file)
@@ -360,9 +364,9 @@ if __name__ == "__main__":
 
     # parsing MIDI files through pass a list to midi_file param
     # list argument is undesirable in python 3, so do not use this except in special cases.
-    # data = parse_midi_to_data_frame(midi_file=["mozart-symphony40-1.mid", "moonlight-movement.mid"])
-    # print(data)
+    data = parse_midi_to_data_frame(midi_file=["mozart-symphony40-1.mid", "moonlight-movement.mid"])
+    print(data)
 
     # parsing all MIDI files and save the data frame in the directory
-    data = parse_midi_to_data_frame(save_data_frame=True)
-    print(data)
+    # data = parse_midi_to_data_frame(save_data_frame=True)
+    # print(data)
