@@ -1,14 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="317327ea-e40b-404c-97b7-b8e581aa0a50" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/hjs/parsing_midi/Mozart-minuet-k2_encoded.mid" afterPath="$PROJECT_DIR$/hjs/parsing_midi/Mozart-minuet-k2_encoded.mid" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/hjs/parsing_midi/moonlight-movement_encoded.mid" afterPath="$PROJECT_DIR$/hjs/parsing_midi/moonlight-movement_encoded.mid" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/hjs/parsing_midi/midi_data/train/data.csv" afterPath="$PROJECT_DIR$/hjs/parsing_midi/midi_data/train/data.csv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/hjs/parsing_midi/parsing_midi.py" afterPath="$PROJECT_DIR$/hjs/parsing_midi/parsing_midi.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/hjs/weaving_data/weaving_data.py" afterPath="$PROJECT_DIR$/hjs/weaving_data/weaving_data.py" />
-    </list>
+    <list default="true" id="317327ea-e40b-404c-97b7-b8e581aa0a50" name="Default" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />

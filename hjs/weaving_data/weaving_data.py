@@ -32,7 +32,7 @@ def weave_data_frame_to_midi(data_frame, midi_file_directory=os.getcwd(), save_m
                 instrument_element.offset = data_frame.iloc[:, 0:4].drop_duplicates().iloc[idx, 3]
                 
         for idx in range(0, len(data_frame.iloc[:, [0, 1, 4, 5, 6]].drop_duplicates())):
-            if not math.isnan(data_frame.iloc[:, [0, 1, 4, 5, 6]].drop_duplicates().iloc[idx, 4]):
+            if not math.isnan(data_frame.iloc[:, [0, 1, 4, 5, 6]].drop_duplicates().iloc[idx, 3]):
                 metronome_element = tempo.MetronomeMark(data_frame.iloc[:, [0, 1, 4, 5, 6]].drop_duplicates().iloc[idx, 2], 
                                                         data_frame.iloc[:, [0, 1, 4, 5, 6]].drop_duplicates().iloc[idx, 3])
                 part_dict[data_frame.iloc[:, [0, 1, 4, 5, 6]].drop_duplicates().iloc[idx, 1]].append(metronome_element)
@@ -91,7 +91,7 @@ def weave_data_frame_to_midi(data_frame, midi_file_directory=os.getcwd(), save_m
                             pitch_element.pitch.octave = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 6]
                             pitch_element.volume.velocity = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 7]
                             pitch_element.duration.quarterLength = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 8]
-                            chord_element.add(chord_element)
+                            chord_element.add(pitch_element)
                             chord_element.offset = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 9]
                     else:
                         print(str(idx) + "th row is cannot converted to midi file")
@@ -106,7 +106,7 @@ def weave_data_frame_to_midi(data_frame, midi_file_directory=os.getcwd(), save_m
                 if score:
                     midi_file = midi.translate.streamToMidiFile(score)
                     
-                    if save_midi_file:
+                    if save_midi_file and midi_file:
                         midi_file.open(midi_file_directory + '/' + _midi_file_name + '_encoded.mid', 'wb')
                         midi_file.write()
                         midi_file.close()
@@ -116,7 +116,7 @@ def weave_data_frame_to_midi(data_frame, midi_file_directory=os.getcwd(), save_m
         print("The inputted data isn't data frame")
         return False
 
-    return stream_data
+    return score_dict
 
 
 def print_progress_bar_weaving(_iter, data_frame):
@@ -136,11 +136,16 @@ def print_progress_bar_weaving(_iter, data_frame):
 
 
 if __name__ == "__main__":
-    stream_data_origin = converter.parse(os.getcwd() + '/midi_data/train/Mozart-minuet-k2.mid')
+    stream_data_origin = converter.parse(os.getcwd() + '/midi_data/train/alla-turca.mid')
     stream_data_origin.show('text')
     
-    data_frame = parse_midi_to_data_frame(midi_file="Autumn-violin-and-piano.mid", save_data_frame=True)
+    midi_file = midi.translate.streamToMidiFile(stream_data_origin)
+    
+    midi_file.open('/Users/junseon/Documents/psyche/IMP/hjs/parsing_midi/alla-turca_encoded_origin.mid', 'wb')
+    midi_file.write()
+    midi_file.close()
+    
+    data_frame = parse_midi_to_data_frame(midi_file="alla-turca.mid", save_data_frame=True)
     print(data_frame)
     
-    stream_data = weave_data_frame_to_midi(data_frame=data_frame)
-    stream_data.show('text')
+    score_dict = weave_data_frame_to_midi(data_frame=data_frame)
