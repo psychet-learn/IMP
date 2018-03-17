@@ -1,7 +1,7 @@
 import os
 
 import pandas as pd
-from music21 import converter, instrument, note, chord, tempo, meter, scale, stream
+from music21 import converter, instrument, note, chord, tempo, meter, key
 from music21.converter import ConverterException
 
 
@@ -37,9 +37,13 @@ def parse_midi_to_data_frame(midi_file_directory=os.getcwd(), midi_file='*',
     """
 
     # Init name of columns
-    cols_name = ['midi_file_name', 'part_id', 'voice_id', 'instrument_name', 'metronome_mark', 'metronome_number',
-                 'time_signature', 'scale', 'element_class_name', 'pitch_name', 'pitch_class', 'octave', 'velocity',
-                 'quarter_length', 'offset']
+    cols_name = ['midi_file_name', 'part_id', 'instrument_name', 'instrument_offset', 
+                 'metronome_mark', 'metronome_number', 'metronome_offset', 
+                 'key_tonic', 'key_mode', 'key_offset', 
+                 'time_signature', 'time_signature_offset', 
+                 'voice_id', 'voice_offset', 
+                 'element_class_name', 'pitch_name', 'pitch_class', 
+                 'octave', 'velocity', 'quarter_length', 'offset']
     # Init array for data frame
     _array = []
 
@@ -112,232 +116,181 @@ def parsing_stream_data(stream_data, midi_file_name, chord_in_a_row):
     # Init array
     _array = []
 
-    if chord_in_a_row:
-        pass
-
     # parsing a streaming data
     for part in stream_data.parts:
-
-        # Init a row variable
-        _midi_file_name = midi_file_name.split('.')[0]
-        _part_id = part.id
-        _voice_id = ''
-        _instrument_name = ''
-        _metronome_mark = ''
-        _metronome_number = ''
-        _time_signature = ''
-        _scale_name = ''
-
         for obj in part:
-
-            if isinstance(obj, stream.Voice):
-                _voice_id = obj.id
-
             try:
                 for element in obj:
-                    if isinstance(element, note.Note):
-                        _element_class_name = "Note"
-                        _pitch_name = element.pitch.name
-                        _pitch_class = element.pitch.pitchClass
-                        _octave = element.pitch.octave
-                        _velocity = element.volume.velocity
-                        _quarter_length = element.duration.quarterLength
-                        _offset = element.offset
-
-                        _row = make_a_row(_midi_file_name, _part_id, _voice_id, _instrument_name,
-                                          _metronome_mark, _metronome_number, _time_signature, _scale_name,
-                                          _element_class_name, _pitch_name, _pitch_class,
-                                          _octave, _velocity, _quarter_length, _offset)
-
-                        _array.append(_row)
-
-                    elif isinstance(element, note.Rest):
-                        _element_class_name = "Rest"
-                        _pitch_name = ''
-                        _pitch_class = ''
-                        _octave = ''
-                        _velocity = ''
-                        _quarter_length = element.duration.quarterLength
-                        _offset = element.offset
-
-                        _row = make_a_row(_midi_file_name, _part_id, _voice_id, _instrument_name,
-                                          _metronome_mark, _metronome_number, _time_signature, _scale_name,
-                                          _element_class_name, _pitch_name, _pitch_class,
-                                          _octave, _velocity, _quarter_length, _offset)
-
-                        _array.append(_row)
-
-                    elif isinstance(element, chord.Chord):
-                        for chord_element in element:
-                            _element_class_name = "Chord"
-                            _pitch_name = chord_element.pitch.name
-                            _pitch_class = chord_element.pitch.pitchClass
-                            _octave = chord_element.pitch.octave
-                            _velocity = chord_element.volume.velocity
-                            _quarter_length = chord_element.duration.quarterLength
-                            _offset = element.offset
-
-                            _row = make_a_row(_midi_file_name, _part_id, _voice_id, _instrument_name,
-                                              _metronome_mark, _metronome_number, _time_signature, _scale_name,
-                                              _element_class_name, _pitch_name, _pitch_class,
-                                              _octave, _velocity, _quarter_length, _offset)
-
-                            _array.append(_row)
-
+                    if isinstance(element, note.Note) or isinstance(element, note.Rest) or \
+                            isinstance(element, chord.Chord):
+                        _row = make_a_row(element, midi_file_name, chord_in_a_row)
+                        if _row:
+                            if isinstance(_row[0], list):
+                                for _row_temp in _row:
+                                    _array.append(_row_temp)
+                            else:
+                                _array.append(_row)
+                        else:
+                            print('This element ' + str(element) + ' is not available')
                     else:
-                        print('this ' + str(element) + ' cannot be converted.')
-
+                        print('this element ' + str(element) + ' cannot be converted.')
             except TypeError:
-                if isinstance(obj, instrument.Instrument):
-                    _instrument_name = obj.bestName()
-                elif isinstance(obj, tempo.MetronomeMark):
-                    _metronome_mark = obj.text
-                    _metronome_number = obj.number
-                elif isinstance(obj, meter.TimeSignature):
-                    _time_signature = obj.ratioString
-                elif isinstance(obj, scale.ConcreteScale):
-                    _scale_name = obj.name
-                else:
-                    if isinstance(obj, note.Note):
-                        _element_class_name = "Note"
-                        _pitch_name = obj.pitch.name
-                        _pitch_class = obj.pitch.pitchClass
-                        _octave = obj.pitch.octave
-                        _velocity = obj.volume.velocity
-                        _quarter_length = obj.duration.quarterLength
-                        _offset = obj.offset
-
-                        _row = make_a_row(_midi_file_name, _part_id, _voice_id, _instrument_name,
-                                          _metronome_mark, _metronome_number, _time_signature, _scale_name,
-                                          _element_class_name, _pitch_name, _pitch_class,
-                                          _octave, _velocity, _quarter_length, _offset)
-
-                        _array.append(_row)
-
-                    elif isinstance(obj, note.Rest):
-                        _element_class_name = "Rest"
-                        _pitch_name = ''
-                        _pitch_class = ''
-                        _octave = ''
-                        _velocity = ''
-                        _quarter_length = obj.duration.quarterLength
-                        _offset = obj.offset
-
-                        _row = make_a_row(_midi_file_name, _part_id, _voice_id, _instrument_name,
-                                          _metronome_mark, _metronome_number, _time_signature, _scale_name,
-                                          _element_class_name, _pitch_name, _pitch_class,
-                                          _octave, _velocity, _quarter_length, _offset)
-
-                        _array.append(_row)
-
-                    elif isinstance(obj, chord.Chord):
-                        for chord_element in obj:
-                            _element_class_name = "Chord"
-                            _pitch_name = chord_element.pitch.name
-                            _pitch_class = chord_element.pitch.pitchClass
-                            _octave = chord_element.pitch.octave
-                            _velocity = chord_element.volume.velocity
-                            _quarter_length = chord_element.duration.quarterLength
-                            _offset = obj.offset
-
-                            _row = make_a_row(_midi_file_name, _part_id, _voice_id, _instrument_name,
-                                              _metronome_mark, _metronome_number, _time_signature, _scale_name,
-                                              _element_class_name, _pitch_name, _pitch_class,
-                                              _octave, _velocity, _quarter_length, _offset)
-
+                if isinstance(obj, note.Note) or isinstance(obj, note.Rest) or \
+                        isinstance(obj, chord.Chord):
+                    _row = make_a_row(element, midi_file_name, chord_in_a_row)
+                    if _row:
+                        if isinstance(_row[0], list):
+                            for _row_temp in _row:
+                                _array.append(_row_temp)
+                        else:
                             _array.append(_row)
-
                     else:
-                        print('this ' + str(obj) + ' cannot be converted.')
+                        print('This element ' + str(element) + ' is not available')
+                elif isinstance(obj, instrument.Instrument) or isinstance(obj, tempo.MetronomeMark) or \
+                        isinstance(obj, meter.TimeSignature) or isinstance(obj, key.Key):
+                    pass
+                else:
+                    print('this object' + str(obj) + ' cannot be converted.')
 
     return _array
 
 
-def make_a_row(_part_name, _part_id, _voice_id, _instrument_name, _metronome_mark, _metronome_number,
-               _time_signature, _scale_name, _element_class_name, _pitch_name, _pitch_class, _octave,
-               _velocity, _quarter_length, _offset):
+def make_a_row(element, _midi_file_name, chord_in_a_row):
+    
+    _midi_file_name = _midi_file_name.split('.')[0]
+    
+    try:
+        _part_id = element.getContextByClass('Part').id
+    except AttributeError:
+        _part_id = None
+    
+    try:
+        _instrument_name = element.getContextByClass('Instrument').bestName()
+        _instrument_offset = element.getContextByClass('Instrument').offset
+    except AttributeError:
+        _instrument_name = None
+        _instrument_offset = None
+    
+    try:
+        _metronome_mark = element.getContextByClass('MetronomeMark').text
+        _metronome_number = element.getContextByClass('MetronomeMark').number
+        _metronome_offset = element.getContextByClass('MetronomeMark').offset
+    except AttributeError:
+        _metronome_mark = None
+        _metronome_number = None
+        _metronome_offset = None
 
-    # Init a row
-    _row = []
+    try:
+        _key_tonic = str(element.getContextByClass('Key')).split(' ')[0]
+        _key_mode = str(element.getContextByClass('Key')).split(' ')[1]
+        _key_offset = element.getContextByClass('Key').offset
+    except (AttributeError, IndexError):
+        _key_tonic = None
+        _key_mode = None
+        _key_offset = None
+    
+    try:
+        _time_signature = element.getContextByClass('TimeSignature').ratioString
+        _time_signature_offset = element.getContextByClass('TimeSignature').offset
+    except AttributeError:
+        _time_signature = None
+        _time_signature_offset = None
+    
+    try:
+        _voice_id = element.getContextByClass('Voice').id
+        _voice_offset = element.getContextByClass('Voice').offset
+    except AttributeError:
+        _voice_id = None
+        _voice_offset = None
+    
+    if element.isNote:
+        _element_class_name = "Note"
+        _pitch_name = str(element.pitch.name)
+        _pitch_class = int(element.pitch.pitchClass)
+        _octave = int(element.pitch.octave)
+        _velocity = int(element.volume.velocity)
+        _quarter_length = element.duration.quarterLength
+        _offset = element.offset
+        
+        _row = [_midi_file_name, _part_id, _instrument_name, _instrument_offset, 
+                _metronome_mark, _metronome_number, _metronome_offset, 
+                _key_tonic, _key_mode, _key_offset, 
+                _time_signature, _time_signature_offset, 
+                _voice_id, _voice_offset, 
+                _element_class_name, _pitch_name, _pitch_class, 
+                _octave, _velocity, _quarter_length, _offset]
 
-    # _part_name
-    if _part_name == '':
-        _row.append(None)
-    else:
-        _row.append(_part_name)
-    # _part_id
-    if _part_id == '':
-        _row.append(None)
-    else:
-        _row.append(_part_id)
-    # _voice_id
-    if _voice_id == '':
-        _row.append(None)
-    else:
-        _row.append(_voice_id)
-    # _instrument_name
-    if _instrument_name == '':
-        _row.append(None)
-    else:
-        _row.append(_instrument_name)
-    # _metronome_mark
-    if _metronome_mark == '':
-        _row.append(None)
-    else:
-        _row.append(_metronome_mark)
-    # _metronome_number
-    if _metronome_number == '':
-        _row.append(None)
-    else:
-        _row.append(_metronome_number)
-    # _time_signature
-    if _time_signature == '':
-        _row.append(None)
-    else:
-        _row.append(_time_signature)
-    # _scale_name
-    if _scale_name == '':
-        _row.append(None)
-    else:
-        _row.append(_scale_name)
-    # _element_class_name
-    if _element_class_name == '':
-        _row.append(None)
-    else:
-        _row.append(_element_class_name)
-    # _pitch_name
-    if _pitch_name == '':
-        _row.append(None)
-    else:
-        _row.append(_pitch_name)
-    # _pitch_class
-    if _pitch_class == '':
-        _row.append(-1)
-    else:
-        _row.append(_pitch_class)
-    # _octave
-    if _octave == '':
-        _row.append(-1)
-    else:
-        _row.append(_octave)
-    # _velocity
-    if _velocity == '':
-        _row.append(-1)
-    else:
-        _row.append(_velocity)
-    # _quarter_length
-    if _quarter_length == '':
-        _row.append(None)
-    else:
-        _row.append(_quarter_length)
-    # _offset
-    if _offset == '':
-        _row.append(None)
-    else:
-        _row.append(_offset)
+        return _row
+    
+    elif element.isRest:
+        _element_class_name = "Rest"
+        _pitch_name = str(None)
+        _pitch_class = int(-1)
+        _octave = int(-1)
+        _velocity = int(-1)
+        _quarter_length = element.duration.quarterLength
+        _offset = element.offset
+        
+        _row = [_midi_file_name, _part_id, _instrument_name, _instrument_offset, 
+                _metronome_mark, _metronome_number, _metronome_offset, 
+                _key_tonic, _key_mode, _key_offset, 
+                _time_signature, _time_signature_offset, 
+                _voice_id, _voice_offset, 
+                _element_class_name, _pitch_name, _pitch_class, 
+                _octave, _velocity, _quarter_length, _offset]
 
-    return _row
+        return _row
+    
+    elif element.isChord:
 
+        _pitch_names = ''
+        _pitch_classes = ''
+        _octaves = ''
+        _velocities = ''
+        _quarter_lengths = ''
+        _row = []
+            
+        for chord_element in element:
+            _element_class_name = "Chord"
+            _pitch_name = str(chord_element.pitch.name)
+            _pitch_class = int(chord_element.pitch.pitchClass)
+            _octave = int(chord_element.pitch.octave)
+            _velocity = int(chord_element.volume.velocity)
+            _quarter_length = chord_element.duration.quarterLength
+            _offset = element.offset
+            
+            if chord_in_a_row:
+                
+                _pitch_names += str(_pitch_name) + '/'
+                _pitch_classes += str(_pitch_class) + '/'
+                _octaves += str(_octave) + '/'
+                _velocities += str(_velocity) + '/'
+                _quarter_lengths += str(_quarter_length) + '/'
+                
+                _row = [_midi_file_name, _part_id, _instrument_name, _instrument_offset, 
+                        _metronome_mark, _metronome_number, _metronome_offset, 
+                        _key_tonic, _key_mode, _key_offset, 
+                        _time_signature, _time_signature_offset, 
+                        _voice_id, _voice_offset, 
+                        _element_class_name, _pitch_names, _pitch_classes, 
+                        _octaves, _velocities, _quarter_lengths, _offset]
+                
+            else:
+                _row_temp = [_midi_file_name, _part_id, _instrument_name, _instrument_offset, 
+                             _metronome_mark, _metronome_number, _metronome_offset, 
+                             _key_tonic, _key_mode, _key_offset, 
+                             _time_signature, _time_signature_offset, 
+                             _voice_id, _voice_offset, 
+                             _element_class_name, _pitch_name, _pitch_class, 
+                             _octave, _velocity, _quarter_length, _offset]
+                _row.append(_row_temp)
+
+        return _row
+    
+    else:
+        
+        return []
+        
 
 def print_progress_bar_parsing(_iter, midi_file):
     _iter += 1
@@ -358,14 +311,17 @@ def print_progress_bar_parsing(_iter, midi_file):
 
 
 if __name__ == "__main__":
+    stream_data_origin = converter.parse(os.getcwd() + '/midi_data/train/Beethoven-Symphony5-1.mid')
+    stream_data_origin.show('text')
+    
     # parsing one MIDI file and save the data frame in the directory
-    # data = parse_midi_to_data_frame(midi_file="moonlight-movement.mid", save_data_frame=True)
+    data_frame = parse_midi_to_data_frame(midi_file="Beethoven-Symphony5-1.mid")
     # print(data)
 
     # parsing MIDI files through pass a list to midi_file param
     # list argument is undesirable in python 3, so do not use this except in special cases.
-    data = parse_midi_to_data_frame(midi_file=["mozart-symphony40-1.mid", "moonlight-movement.mid"])
-    print(data)
+    # data = parse_midi_to_data_frame(midi_file=["mozart-symphony40-1.mid", "moonlight-movement.mid"])
+    # print(data)
 
     # parsing all MIDI files and save the data frame in the directory
     # data = parse_midi_to_data_frame(save_data_frame=True)

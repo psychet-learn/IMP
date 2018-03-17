@@ -1,95 +1,116 @@
 import os
+import math
 
 import pandas as pd
-from music21 import instrument, note, chord, tempo, meter, stream, midi, key
+from music21 import converter, instrument, note, chord, tempo, meter, stream, midi, key
 
 from ..parsing_midi.parsing_midi import parse_midi_to_data_frame
 
 
 def weave_data_frame_to_midi(data_frame, midi_file_directory=os.getcwd(), save_midi_file=True):
     if isinstance(data_frame, pd.DataFrame):
-        stream_data = stream.Score()
         
-        for idx in range(0, len(data_frame)):
-            _midi_file_name = data_frame.iloc[idx, 0]
-            
-            if idx <= 0 or data_frame.iloc[idx-1, 1] != data_frame.iloc[idx, 1] \
-                    or data_frame.iloc[idx-1, 0] != data_frame.iloc[idx, 0]:
+        score_dict = {}
+        for idx in range(0, len(data_frame.iloc[:, 0:1].drop_duplicates())):
+            score = stream.Score()
+            score_dict[data_frame.iloc[:, 0:1].drop_duplicates().iloc[idx, 0]] = score
+        
+        part_dict = {}
+        for idx in range(0, len(data_frame.iloc[:, 0:2].drop_duplicates())):
+            if not math.isnan(data_frame.iloc[:, 0:2].drop_duplicates().iloc[idx, 1]):
                 part = stream.Part()
-                stream_data.append(part)
+                part_dict[data_frame.iloc[:, 0:2].drop_duplicates().iloc[idx, 1]] = part
+                score_dict[data_frame.iloc[:, 0:2].drop_duplicates().iloc[idx, 0]].append(part)
+            
+        for idx in range(0, len(data_frame.iloc[:, 0:4].drop_duplicates())):
+            if not math.isnan(data_frame.iloc[:, 0:4].drop_duplicates().iloc[idx, 3]):
+                if data_frame.iloc[:, 0:4].drop_duplicates().iloc[idx, 2] == 'StringInstrument':
+                    instrument_element = instrument.StringInstrument()
+                else:
+                    instrument_element = instrument.fromString(data_frame.iloc[:, 0:4].drop_duplicates().iloc[idx, 2])
+                part_dict[data_frame.iloc[:, 0:4].drop_duplicates().iloc[idx, 1]].append(instrument_element)
+                instrument_element.offset = data_frame.iloc[:, 0:4].drop_duplicates().iloc[idx, 3]
                 
-            _instrument_name = data_frame.iloc[idx, 3]
-            if _instrument_name == "StringInstrument":
-                instrument_element = instrument.StringInstrument()
-                part.append(instrument_element)
-            elif idx <= 0 or data_frame.iloc[idx-1, 1] != data_frame.iloc[idx, 1] \
-                    or data_frame.iloc[idx-1, 1] != data_frame.iloc[idx, 1]:
-                instrument_element = instrument.fromString(_instrument_name)
-                part.append(instrument_element)
-                
-            _metronome_mark = data_frame.iloc[idx, 4]
-            _metronome_number = data_frame.iloc[idx, 5]
-            if idx <= 0 or data_frame.iloc[idx-1, 5] != data_frame.iloc[idx, 5] \
-                    or data_frame.iloc[idx-1, 1] != data_frame.iloc[idx, 1]:
-                metronome_element = tempo.MetronomeMark(_metronome_mark, _metronome_number)
-                part.append(metronome_element)
-                
-            _scale_name = data_frame.iloc[idx, 7].split(' ')[0]
-            if idx <= 0 or data_frame.iloc[idx-1, 5] != data_frame.iloc[idx, 5] \
-                    or data_frame.iloc[idx-1, 1] != data_frame.iloc[idx, 1]:
-                scale_element = key.Key(_scale_name)
-                part.append(scale_element)
-                
-            _time_signature = data_frame.iloc[idx, 6]
-            if idx <= 0 or data_frame.iloc[idx-1, 6] != data_frame.iloc[idx, 6] \
-                    or data_frame.iloc[idx-1, 1] != data_frame.iloc[idx, 1]:
-                time_signature_element = meter.TimeSignature(_time_signature)
-                part.append(time_signature_element)
-                            
-            if idx <= 0 or data_frame.iloc[idx-1, 2] != data_frame.iloc[idx, 2] \
-                    or data_frame.iloc[idx-1, 1] != data_frame.iloc[idx, 1]:
+        for idx in range(0, len(data_frame.iloc[:, [0, 1, 4, 5, 6]].drop_duplicates())):
+            if not math.isnan(data_frame.iloc[:, [0, 1, 4, 5, 6]].drop_duplicates().iloc[idx, 4]):
+                metronome_element = tempo.MetronomeMark(data_frame.iloc[:, [0, 1, 4, 5, 6]].drop_duplicates().iloc[idx, 2], 
+                                                        data_frame.iloc[:, [0, 1, 4, 5, 6]].drop_duplicates().iloc[idx, 3])
+                part_dict[data_frame.iloc[:, [0, 1, 4, 5, 6]].drop_duplicates().iloc[idx, 1]].append(metronome_element)
+                metronome_element.offset = data_frame.iloc[:, [0, 1, 4, 5, 6]].drop_duplicates().iloc[idx, 4]
+            
+        for idx in range(0, len(data_frame.iloc[:, [0, 1, 7, 8, 9]].drop_duplicates())):
+            if not math.isnan(data_frame.iloc[:, [0, 1, 7, 8, 9]].drop_duplicates().iloc[idx, 4]):
+                key_element = key.Key(data_frame.iloc[:, [0, 1, 7, 8, 9]].drop_duplicates().iloc[idx, 2],
+                                      data_frame.iloc[:, [0, 1, 7, 8, 9]].drop_duplicates().iloc[idx, 3])
+                part_dict[data_frame.iloc[:, [0, 1, 7, 8, 9]].drop_duplicates().iloc[idx, 1]].append(key_element)
+                key_element.offset = data_frame.iloc[:, [0, 1, 7, 8, 9]].drop_duplicates().iloc[idx, 4]
+            
+        for idx in range(0, len(data_frame.iloc[:, [0, 1, 10, 11]].drop_duplicates())):
+            if not math.isnan(data_frame.iloc[:, [0, 1, 10, 11]].drop_duplicates().iloc[idx, 3]):
+                time_signature_element = meter.TimeSignature(data_frame.iloc[:, [0, 1, 10, 11]].drop_duplicates().iloc[idx, 2])
+                part_dict[data_frame.iloc[:, [0, 1, 10, 11]].drop_duplicates().iloc[idx, 1]].append(time_signature_element)
+                time_signature_element.offset = data_frame.iloc[:, [0, 1, 10, 11]].drop_duplicates().iloc[idx, 3]
+        
+        voice_dict = {}
+        for idx in range(0, len(data_frame.iloc[:, [0, 1, 12, 13]].drop_duplicates())):
+            if not math.isnan(data_frame.iloc[:, [0, 1, 12, 13]].drop_duplicates().iloc[idx, 2]):
                 voice = stream.Voice()
-                part.append(voice)
+                voice_dict[data_frame.iloc[:, [0, 1, 12, 13]].drop_duplicates().iloc[idx, 2]] = voice
+                part_dict[data_frame.iloc[:, [0, 1, 12, 13]].drop_duplicates().iloc[idx, 1]].append(voice)
+                voice.offset = data_frame.iloc[:, [0, 1, 12, 13]].drop_duplicates().iloc[idx, 3]
                 
-            if data_frame.iloc[idx, 8] == 'Note':
-                element = note.Note()
-                voice.append(element)
-                element.pitch.name = data_frame.iloc[idx, 9]
-                element.pitch.octave = int(data_frame.iloc[idx, 11])
-                element.duration.quarterLength = data_frame.iloc[idx, 13]
-                element.offset = data_frame.iloc[idx, 14]
-            elif data_frame.iloc[idx, 8] == 'Rest':
-                element = note.Rest()
-                voice.append(element)
-                element.duration.quarterLength = data_frame.iloc[idx, 13]
-                element.offset = data_frame.iloc[idx, 14]
-            elif data_frame.iloc[idx, 8] == 'Chord':
-                if data_frame.iloc[idx, 14] != data_frame.iloc[idx-1, 14]:
-                    element = chord.Chord()
-                    voice.append(element)
-                chord_element = note.Note()
-                chord_element.pitch.name = data_frame.iloc[idx, 9]
-                chord_element.pitch.octave = int(data_frame.iloc[idx, 11])
-                chord_element.duration.quarterLength = data_frame.iloc[idx, 13]
-                element.add(chord_element)
-                element.offset = data_frame.iloc[idx, 14]
-            else:
-                print(str(idx) + "'th row cannot encode")
+        for idx in range(0, len(data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]])):
+            try:
+                if not math.isnan(data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 9]):
+                    if data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 3] == "Note":
+                        note_element = note.Note()
+                        voice_dict[data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 2]].append(note_element)
+                        note_element.pitch.name = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 4]
+                        note_element.pitch.octave = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 6]
+                        note_element.volume.velocity = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 7]
+                        note_element.duration.quarterLength = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 8]
+                        note_element.offset = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 9]
+                    
+                    elif data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 3] == "Rest":
+                        rest_element = note.Rest()
+                        voice_dict[data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 2]].append(rest_element)
+                        rest_element.duration.quarterLength = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 8]
+                        rest_element.offset = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 9]
+                                    
+                    elif data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 3] == "Chord":
+                        if data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx-1, 9] != data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 9] or data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 3] != 'Chord':
+                            chord_element = chord.Chord()
+                            voice_dict[data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 2]].append(chord_element)
+                        
+                        if len(data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 4]) > 2:
+                            print("When the chord is in a row is still under development.")
+                            return False
+                        else:
+                            pitch_element = note.Note()
+                            pitch_element.pitch.name = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 4]
+                            pitch_element.pitch.octave = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 6]
+                            pitch_element.volume.velocity = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 7]
+                            pitch_element.duration.quarterLength = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 8]
+                            chord_element.add(chord_element)
+                            chord_element.offset = data_frame.iloc[:, [0, 1, 12, 14, 15, 16, 17, 18, 19, 20]].iloc[idx, 9]
+                    else:
+                        print(str(idx) + "th row is cannot converted to midi file")
+            except KeyError:
+                pass
                 
             print_progress_bar_weaving(idx, data_frame)
 
-            if idx >= len(data_frame)-1 or _midi_file_name != data_frame.iloc[idx+1, 0]:
-                # writing a midi file
-                midi_file = midi.translate.streamToMidiFile(stream_data)
-
-                if save_midi_file:
-                    midi_file.open(midi_file_directory + '/' + _midi_file_name + '_encoded.mid', 'wb')
-                    midi_file.write()
-                    midi_file.close()
-                    print(midi_file_directory + '/' + _midi_file_name + '_encoded.mid is saved')
-                
-                # Init the stream_data for new midi file(separating the merged midi file data frame).
-                stream_data = stream.Score()
+                    
+        if score_dict:
+            for _midi_file_name, score in zip(score_dict.keys(), score_dict.values()):
+                if score:
+                    midi_file = midi.translate.streamToMidiFile(score)
+                    
+                    if save_midi_file:
+                        midi_file.open(midi_file_directory + '/' + _midi_file_name + '_encoded.mid', 'wb')
+                        midi_file.write()
+                        midi_file.close()
+                        print(midi_file_directory + '/' + _midi_file_name + '_encoded.mid is saved')
 
     else:
         print("The inputted data isn't data frame")
@@ -115,9 +136,11 @@ def print_progress_bar_weaving(_iter, data_frame):
 
 
 if __name__ == "__main__":
-    data = parse_midi_to_data_frame(midi_file="moonlight-movement.mid")
-    print(data)
+    stream_data_origin = converter.parse(os.getcwd() + '/midi_data/train/Mozart-minuet-k2.mid')
+    stream_data_origin.show('text')
     
-    # TODO: have to sort the data frame, before input the data to method <weave_data_frame_to_midi>.
-    stream_data = weave_data_frame_to_midi(data_frame=data)
+    data_frame = parse_midi_to_data_frame(midi_file="Autumn-violin-and-piano.mid", save_data_frame=True)
+    print(data_frame)
+    
+    stream_data = weave_data_frame_to_midi(data_frame=data_frame)
     stream_data.show('text')
