@@ -4,7 +4,7 @@ import math
 import pandas as pd
 from music21 import converter, instrument, note, chord, tempo, meter, stream, midi, key
 
-from ..parsing_midi.parsing_midi import parse_midi_to_data_frame
+# from ..parsing_midi.parsing_midi import parse_midi_to_data_frame
 
 
 def weave_data_frame_to_midi(data_frame, midi_file_directory=os.getcwd(), save_midi_file=True):
@@ -136,16 +136,46 @@ def print_progress_bar_weaving(_iter, data_frame):
 
 
 if __name__ == "__main__":
-    stream_data_origin = converter.parse(os.getcwd() + '/midi_data/train/alla-turca.mid')
-    stream_data_origin.show('text')
+    rd = "/Users/junseon/Documents/psyche/IMP/hjs/parsing_midi/midi_data/train/Mozart-minuet-k2.mid"
+    wd = "/Users/junseon/Documents/psyche/IMP/hjs/parsing_midi/Mozart-minuet-k2_encoded_origin.mid"
     
-    midi_file = midi.translate.streamToMidiFile(stream_data_origin)
-    
-    midi_file.open('/Users/junseon/Documents/psyche/IMP/hjs/parsing_midi/alla-turca_encoded_origin.mid', 'wb')
+    mf = midi.MidiFile()
+    mf.open(str(rd))
+    mf.read()
+    mf.close()
+    # stream_data = midi.translate.midiFileToStream(mf)
+    print(mf)
+
+    midi_file = mf
+
+    midi_file.open(wd, 'wb')
     midi_file.write()
     midi_file.close()
     
-    data_frame = parse_midi_to_data_frame(midi_file="alla-turca.mid", save_data_frame=True)
-    print(data_frame)
     
-    score_dict = weave_data_frame_to_midi(data_frame=data_frame)
+    
+    from mido import MidiFile
+    
+    rd = "/Users/junseon/Desktop/asdf.mid"
+    wd = "/Users/junseon/Desktop/asdf_asdf.mid"
+
+    mid = MidiFile(rd)
+    # print(mid)
+    for i, track in enumerate(mid.tracks):
+        print('Track {}: {}'.format(i, track.name))
+        for msg in track:
+            print(msg)
+
+    # stream_data_origin = converter.parse(os.getcwd() + '/midi_data/train/alla-turca_encoded_origin.mid')
+    # stream_data_origin.show('text')
+    #
+    # midi_file = midi.translate.streamToMidiFile(stream_data)
+    #
+    # midi_file.open('/Users/junseon/Documents/psyche/IMP/hjs/parsing_midi/test.mid', 'wb')
+    # midi_file.write()
+    # midi_file.close()
+    #
+    # data_frame = parse_midi_to_data_frame(midi_file="Autumn.mid", save_data_frame=True)
+    # print(data_frame)
+    #
+    # score_dict = weave_data_frame_to_midi(data_frame=data_frame)

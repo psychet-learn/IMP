@@ -32,9 +32,10 @@ def lstm_model():
 
 if __name__ == "__main__":
     # parsing all MIDI files and save the data frame in the directory
-    data = parse_midi_to_data_frame(midi_file="deutschlandlied.mid")
+    deutschlandlied_data = parse_midi_to_data_frame(midi_file="deutschlandlied.mid")
+    # data = deutschlandlied_data
     
     # preprocessing the data
-    pre_processed_data = data_pre_processing(data)
+    pre_processed_data = data_pre_processing(deutschlandlied_data)
     
     
